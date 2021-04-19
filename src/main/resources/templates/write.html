@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>写文章</title>
+    <!-- Bootstrap core CSS -->
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/blog.css}" rel="stylesheet">
+    <script th:src="@{/js/jquery-3.4.1.min.js}" type="text/javascript"></script>
+    <script th:src="@{/js/bootstrap.min.js}" type="text/javascript"></script>
+    <!-- 配置文件 -->
+    <script type="text/javascript" th:src="@{/ueditor/ueditor.config.js}"></script>
+    <!-- 编辑器源码文件 -->
+    <script type="text/javascript" th:src="@{/ueditor/ueditor.all.js}"></script>
+    <script type="text/javascript" th:src="@{/ueditor/lang/zh-cn/zh-cn.js}"></script>
+</head>
+<body>
+    <div th:include="top :: nav"></div>
+    <div class="container">
+        <div class="row">
+            <div class="page-header">
+                <h1>写文章 <small>将知识传播下去</small></h1>
+            </div>
+            <div class="alert alert-danger" role="alert" th:if="${submitFail} ne null" th:text="${submitFail}"></div>
+        </div>
+        <form action="/submitBlog" method="post">
+            <input type="hidden" name="blogger.account" th:value="${session.blogger.account}">
+            <div class="row">
+                <strong>选择博文类别：</strong>
+                <select name="blogType.id" class="form-control" style="display: inline;width: 150px">
+                    <option th:each="type : ${session.blogType}" th:value="${type.id}" th:text="${type.typeName}"></option>
+                </select>
+            </div>
+            <div class="row" style="margin-top: 20px">
+                <strong>博文标题：</strong>
+                <input name="title" type="text" class="form-control" placeholder="请输入博文标题" style="display: inline;width: 500px" th:value="${failBlog?.title}">
+            </div>
+            <div class="row" style="margin-top: 20px">
+                <strong>博文内容：</strong>
+                <div>
+                    <script th:text="${failBlog?.context}" id="editor" type="text/plain" style="width:1200px;height:700px;"></script>
+                </div>
+                <!--<textarea name="context" class="form-control" rows="15" placeholder="请输入博文内容" th:text="${failBlog?.context}"></textarea>-->
+                <script type="text/javascript">
+                    var ue = UE.getEditor('editor');
+                </script>
+                <input id="context" type="hidden" name="context"/>
+                <input id="brief" type="hidden" name="brief"/>
+            </div>
+            <div class="row" style="margin-top: 20px;text-align: center">
+                <button id="submit" type="submit" class="btn btn-primary">提交</button>
+                <button type="reset" class="btn">重置</button>
+            </div>
+        </form>
+        <div class="row" th:include="bottom :: state"></div>
+    </div>
+</body>
+<script type="text/javascript">
+    $(function () {
+        var ue = UE.getEditor('editor');
+        $("#submit").click(function () {
+            $("#context").val(ue.getContent());
+            $("#brief").val(ue.getContentTxt().substring(0,10));
+        });
+    });
+</script>
+</html>

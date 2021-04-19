@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>left</title>
+</head>
+<body>
+    <div th:fragment="blog_type">
+        <p style="text-align: center"><strong>博文类型</strong></p>
+        <ul class="list-group" th:if="${session.blogType} ne null">
+            <li class="list-group-item" th:if="${session.blogType} ne null">
+                <a href="/type/0">所有类型</a>
+            </li>
+            <li class="list-group-item" th:each="type :${session.blogType}">
+                <a th:href="${'/type/' + type.id}" th:text="${type.typeName}"></a>
+            </li>
+        </ul>
+        <ul class="list-group" th:if="${session.blogType} eq null">
+            <li class="list-group-item">暂无</li>
+        </ul>
+    </div>
+</body>
+</html>

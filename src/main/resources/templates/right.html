@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>right</title>
+</head>
+<body>
+    <div th:fragment="hot">
+        <p style="text-align: center"><strong>热点博文</strong></p>
+        <ul class="list-group">
+            <li class="list-group-item" th:each="hotBlog :${session.hotBlogs}">
+                <a th:href="'/details/' + ${hotBlog.id}" th:text="${hotBlogStat.index+1} + '. ' + ${hotBlog.title}"></a>
+            </li>
+        </ul>
+        <ul class="list-group" th:if="${session.hotBlogs} eq null">
+            <li class="list-group-item">暂无</li>
+        </ul>
+    </div>
+</body>
+</html>

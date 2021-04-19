@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>博文详情</title>
+    <!-- Bootstrap core CSS -->
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/blog.css}" rel="stylesheet">
+    <script th:src="@{/js/jquery-3.4.1.min.js}" type="text/javascript"></script>
+    <script th:src="@{/js/bootstrap.min.js}" type="text/javascript"></script>
+    <style type="text/css">
+        .container {
+            width: 1830px;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:include="top :: nav"></div>
+    <!-- 模态框 -->
+    <div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">写评论</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal">
+                        <input type="hidden" name="blogTextId" th:value="${blog.id}"/>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">用户昵称</label>
+                            <div class="col-sm-10">
+                                <input name="nickname" type="text" class="form-control" placeholder="请输入昵称" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputArea" class="col-sm-2 control-label">输入评论</label>
+                            <div class="col-sm-10">
+                                <textarea id="inputArea" name="commentText" class="form-control" rows="3" placeholder="请输入评论"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button id="saveComment" type="button" class="btn btn-primary">确定</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <!--左边类别-->
+            <div class="col-lg-2" th:include="left :: blog_type"></div>
+            <div class="col-lg-8 row">
+                <div class="jumbotron">
+                    <img th:if="${session.blogger} ne null" th:src="${session.blogger.image}" style="width: 50px;height: 50px"/>
+                    <h1 th:if="${session.blogger} eq null">你好,游客</h1>
+                    <h1 th:if="${session.blogger} ne null">你好,[[${session.blogger.nickname}]]</h1>
+                </div>
+                <div class="page-header">
+                    <h2>博文内容 <small>一起共享知识</small><a href="/index" style="float: right;font-size: medium;margin-top: 10px">&laquo;&laquo;返回首页</a></h2>
+                </div>
+                <div>
+                    <h2><strong>[[${blog.title}]]</strong></h2>
+                    <p><strong>作者：</strong>[[${blog.blogger.nickname}]]</p>
+                    <p><strong>阅读次数：</strong>[[${blog.readCount}]]</p>
+                    <p><strong>发布时间：</strong>[[${#dates.format(blog.createTime,'yyyy-MM-dd HH:mm:ss')}]]</p>
+                    <p><strong>最后修改：</strong>[[${#dates.format(blog.lastMod,'yyyy-MM-dd HH:mm:ss')}]]</p>
+                    <hr/>
+                    <div th:utext="${blog.context}"></div>
+                    <button id="like" done="false" type="button" class="btn btn-default">
+                        <span class="glyphicon glyphicon-heart" aria-hidden="true"></span> [[${blog.likeCount}]]
+                    </button>
+                    <hr/>
+                    <h2><strong>全部评论</strong> <small>(共[[${#lists.size(blogComments)}]]条评论)</small>
+                        <button id="addComment" type="button" class="btn btn-default" style="float: right;font-size: medium">
+                            <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> 我要评论
+                        </button>
+                    </h2>
+                    <hr/>
+                    <div th:each="blogComment :${blogComments}">
+                        <p><strong>[评论者[[${blogCommentStat.index+1}]]]</strong> <strong>[[${blogComment.nickname}]]</strong>&nbsp;&nbsp;&nbsp;[[${#dates.format(blogComment.commentTime,'yyyy-MM-dd HH:mm:ss')}]]</p>
+                        <p th:text="${blogComment.commentText}"/>
+                        <hr/>
+                    </div>
+                </div><!--/.col-xs-6.col-lg-4-->
+            </div>
+            <!--右边热点-->
+            <div class="col-lg-2" th:include="right :: hot"></div>
+        </div>
+        <div class="row" th:include="bottom :: state"></div>
+    </div>
+</body>
+<script type="text/javascript">
+    $(function () {
+
+        $("#addComment").click(function () {
+            $("#commentModal form")[0].reset();
+            $("#commentModal").modal({
+                backdrop:"static"
+            });
+        });
+
+        $("#saveComment").click(function () {
+            $.ajax({
+                url: "/comment",
+                method: "POST",
+                data: $("#commentModal form").serialize(),
+                success: function (result) {
+                    if (result.code == "200") {
+                        $("#commentModal").modal('hide');
+                        alert("评论成功！");
+                        location.reload();
+                    } else {
+                        alert(result.infoMap.failMsg);
+                    }
+                }
+            });
+        });
+
+        $("#like").click(function () {
+            var like =  $("#like span");
+            if ($(this).attr("done") == "false") {
+                $.ajax({
+                    url: "/updateBlogField/"+ [[${blog.id}]] +"/like_count/1",
+                    type: "GET",
+                    success: function (result) {
+                        $("#like").html("<span class=\"glyphicon glyphicon-heart\" aria-hidden=\"true\"></span> " + [[${blog.likeCount+1}]]);
+                        $("#like").attr("done","true");
+                        $("#like").css("color","orangered");
+                    }
+                });
+            } else {
+                $.ajax({
+                    url: "/updateBlogField/"+ [[${blog.id}]] +"/like_count/2",
+                    type: "GET",
+                    success: function (result) {
+                        $("#like").html("<span class=\"glyphicon glyphicon-heart\" aria-hidden=\"true\"></span> " + [[${blog.likeCount}]]);
+                        $("#like").attr("done","false");
+                        $("#like").css("color","");
+                    }
+                });
+            }
+        });
+    });
+</script>
+</html>

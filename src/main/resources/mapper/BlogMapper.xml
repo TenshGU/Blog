@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.scau.blog.mapper.BlogMapper">
+    <select id="getBlogCounterByAccount" resultType="blogCounter">
+        select count(t.id) blogPieces,ifnull(sum(read_count),0) readTimes,
+               ifnull(sum(like_count),0) likeTimes,count(c.id) commentTimes
+        from blog_text t
+        left join blog_comment c
+        on t.id = c.blog_text_id
+        where blogger_account = #{blogger_account}
+    </select>
+
+    <resultMap id="blogMap" type="blog">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="brief" column="brief"/>
+        <result property="context" column="context"/>
+        <result property="createTime" column="create_time"/>
+        <result property="lastMod" column="last_mod"/>
+        <result property="readCount" column="read_count"/>
+        <result property="likeCount" column="like_count"/>
+        <association property="blogType"
+                     select="getBlogType"
+                     column="blog_type_id"/>
+        <association property="blogger"
+                     select="cn.edu.scau.blog.mapper.BloggerMapper.getBloggerByAccount"
+                     column="blogger_account"/>
+        <collection property="blogComments"
+                    select="getBlogCommentById"
+                    column="id"/>
+    </resultMap>
+
+    <select id="getBlogType" resultType="blogType">
+        select * from blog_type where id = #{id}
+    </select>
+
+    <select id="getAllBlogs" resultMap="blogMap">
+        select * from blog_text
+        order by last_mod desc
+    </select>
+
+    <select id="getBlogCommentById" resultType="blogComment">
+        select * from blog_comment where blog_text_id = #{id}
+    </select>
+
+    <select id="getBlogTypes" resultType="blogType">
+        select * from blog_type;
+    </select>
+
+    <select id="getBlogById" resultMap="blogMap">
+        select * from blog_text where id = #{id}
+    </select>
+
+    <update id="incrBlogFieldById">
+        update blog_text
+        set ${field} = ${field} + 1
+        where id = #{id}
+    </update>
+
+    <update id="decrBlogFieldById">
+        update blog_text
+        set ${field} = ${field} - 1
+        where id = #{id}
+    </update>
+
+    <select id="getBlogCommentsById" resultType="blogComment">
+        select * from blog_comment
+        where blog_text_id = #{id}
+        order by comment_time desc
+    </select>
+
+    <select id="getBlogsByBlogType" resultMap="blogMap">
+        select * from blog_text
+        where blog_type_id = #{id}
+        order by last_mod desc
+    </select>
+    
+    <insert id="insertBlog" parameterType="blog"
+    useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into blog_text
+        values(null,#{title},#{brief},#{context},
+               #{createTime},#{lastMod},#{readCount},
+               #{likeCount},#{blogType.id},#{blogger.account})
+    </insert>
+
+    <insert id="insertBlogComment" parameterType="blogComment"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into blog_comment
+        values(null,#{nickname},#{commentText},#{commentTime},#{blogTextId})
+    </insert>
+</mapper>

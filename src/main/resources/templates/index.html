@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>博客园</title>
+    <!-- Bootstrap core CSS -->
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/blog.css}" rel="stylesheet">
+    <script th:src="@{/js/jquery-3.4.1.min.js}" type="text/javascript"></script>
+    <script th:src="@{/js/bootstrap.min.js}" type="text/javascript"></script>
+    <style type="text/css">
+        .container {
+            width: 1830px;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:include="top :: nav"></div>
+    <div class="container">
+        <div class="row">
+            <!--左边类别-->
+            <div class="col-lg-2" th:include="left :: blog_type"></div>
+            <div class="col-lg-8 row">
+                <div class="jumbotron">
+                    <img th:if="${session.blogger} ne null" th:src="${session.blogger.image}" style="width: 50px;height: 50px"/>
+                    <h1 th:if="${session.blogger} eq null">你好,游客</h1>
+                    <h1 th:if="${session.blogger} ne null">你好,[[${session.blogger.nickname}]]</h1>
+                    <p th:if="${session.blogger} ne null">你一共发布[[${session.blogCounter.blogPieces}]]篇文章,总共阅读次数为[[${session.blogCounter.readTimes}]]次,总共收获点赞数为[[${session.blogCounter.likeTimes}]]次,总共被评论[[${session.blogCounter.commentTimes}]]次</p>
+                    <p th:if="${session.blogger} ne null"><strong>博主简介：</strong></p>
+                    <p th:if="${session.blogger} ne null">[[${session.blogger.brief}]]</p>
+                </div>
+                <div class="page-header">
+                    <h2>博文列表 <small>一起共享知识</small></h2>
+                </div>
+                <div class="row" style="display: -webkit-box;display: -webkit-flex;display: -ms-flexbox;display: flex;flex-wrap: wrap;">
+                    <div class="col-xs-6 col-lg-4" style="display: flex;flex-direction: column;" th:each="blog : ${allBlogs}">
+                        <a style="color: black" th:href="'/details/' + ${blog.id}">
+                            <h4><strong>[[${blog.title}]]</strong></h4>
+                        </a>
+                        <p>[[${blog.brief + '.....'}]]</p>
+                        <p><strong>发布时间：</strong>[[${#dates.format(blog.createTime,'yyyy-MM-dd HH:mm:ss')}]]</p>
+                        <p><strong>点赞数：</strong>[[${blog.likeCount}]]</p>
+                        <p><strong>评论数：</strong>[[${#lists.size(blog.blogComments)}]]</p>
+                        <p><a class="btn btn-primary" th:href="'/details/' + ${blog.id}" role="button">查看详情 &raquo;</a></p>
+                    </div><!--/.col-xs-6.col-lg-4-->
+                </div>
+            </div>
+            <!--右边热点-->
+            <div class="col-lg-2" th:include="right :: hot"></div>
+        </div>
+        <div class="row" th:include="bottom :: state"></div>
+    </div>
+</body>
+</html>
